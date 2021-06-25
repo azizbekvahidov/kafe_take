@@ -1,0 +1,175 @@
+
+#addBtn{
+    position: absolute;
+    top: 4px;
+    right: 15px;
+    font-size: 15px;
+    font-weight: bold;
+    color: black;
+}
+
+.removed{
+    line-height: 2vh;
+    font-size: 2vh;
+    text-align: center;
+    cursor: pointer;
+}
+.closedBtns{
+    margin: 0 auto;
+    width: 200px;
+}
+.plus {
+    cursor: pointer;
+}
+.thumbnail {
+    height: 17vh!important;
+    font-size: 2vh;
+}
+
+.sidebar {
+    width: 20%;
+    height: 90vh;
+    background: none;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    background: none!important;
+    margin-top: 1vh;
+}
+.right-sidebar {
+    height: 90vh;
+    z-index: 1;
+    position: absolute;
+    width: 27%;
+    margin-top: 8vh;
+    top: 0;
+    right: 0;
+    font-size: 2vh;
+    background: none!important;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    border-left: 2px solid #000!important;
+}
+
+#page-wrappers {
+    height: 90vh;
+    overflow-y: scroll;
+    margin: 0 27% 0 20%;
+    padding: 15px;
+    margin-top: 5vh;
+    position: absolute;
+    top: 0;
+}
+#createDiv, #createDiv a {
+     color: #000!important;
+ }
+
+#page::after {
+    content: "";
+    background: url(/images/bg7.jpg);
+    opacity: 0.5;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    position: absolute;
+    z-index: -1;
+    height: 100vh;
+    overflow: hidden;
+}
+.right-sidebar .expense-form > div::-webkit-scrollbar{
+    width: 0;
+}
+.sidebar::-webkit-scrollbar{
+    width: 0;
+}
+
+.right-sidebar::-webkit-scrollbar{
+    width: 0;
+}
+#page-wrappers::-webkit-scrollbar{
+    width: 0;
+}
+
+.fa{
+    font-size: 100%;
+}
+
+.thumbnail {
+    position: relative;
+}
+
+.texts {
+    position: absolute;
+    top: 3px;
+
+}
+
+#expense-form {
+    margin-top: 0px;
+}
+
+.cnt {
+    cursor: pointer;
+}
+
+.liStyle {
+    list-style: none;
+    border: none !important;
+}
+.sidebar ul li {
+    border-bottom: 2px solid #000;
+}
+#menuList {
+    border-right: 2px solid #000;
+}
+.dataTable td,th {
+    border: 1px solid #000!important;
+}
+#dataTable .btn {
+    padding: 0;
+}
+.dataTable td, th {
+    padding: 4px !important;
+}
+#menuList a {
+    padding: 10px 10px 10px 17px;
+    font-size: 2vh;
+}
+.hideBlock{
+    padding: 10px;
+    background: #ccc;
+    position: absolute;
+    width: 100%;
+    display: none;
+}
+.changed a, .changed a:hover {
+    background-color: #99ff28;
+    border-left: 1px solid #000;
+    border-right: 1px solid #000;
+    color: #000!important;
+}
+.nav-tabs>li>a:hover{
+    color: #000!important;
+}
+.change a, .change a:hover {
+    background-color: #ff585a;
+    border-left: 1px solid #000;
+    border-right: 1px solid #000;
+    color: #fff!important;
+}
+li.active.changed a{
+    background-color: #29b407!important;
+}
+li.active.change a{
+    background-color: #a34648!important;
+}
+.tab-content{
+    z-index: 1;
+    font-size: 2vh
+}
+#debtComment{
+    z-index: 9999;
+}
+#termSum{
+    z-index: 9999;
+}
