@@ -97,7 +97,7 @@
         </tr>
         <tr>
             <td class="text-center" colspan="4">
-                <input type="text" class="form-control discount" name="discount" placeholder="Скидка к счету">
+                <input type="text" class="form-control discount" name="discount" value='<?=$model['discount']?>' placeholder="Скидка к счету">
             </td>
         </tr>
     </tfoot>

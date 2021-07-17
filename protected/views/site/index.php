@@ -7,6 +7,7 @@
     </ul>
     <div class="clearfix"></div>
     <button type="button" class="btn" id="addBtn">+</button>
+	<a id="btnPrint" class="hide" data-href="" >print</a>
 
     <input id="tempPrice" type="text" class="hidden" />
     <div >
@@ -105,6 +106,19 @@
             }
         }
 
+	$(document).on('click','.closeExp',function(){
+            var sum = $(".tab-content .active .dataTable .summ").text();
+            var discount = $(".tab-content .active .dataTable .discount").val();
+        $("#expsId").val(globExpId);
+		$("#summs").focus();
+		 $("#expSums").text(sum*-1);
+		 $("#expSumHide").val(sum*-1);
+    });
+	$(document).on("keyup","#summs",function(){
+		let cnt = $(this).val() != "" ? parseInt($(this).val()) : 0;
+		let s = parseInt($("#expSumHide").val());
+		$("#expSums").text(s + cnt);
+	});
         function getOrder(expId){
             $.ajax({
                 type: "POST",
@@ -128,13 +142,13 @@
                         '<a href="javascript:;" data-href="expense/printExpCheck?exp='+ expId+'" class="btn btn-default btnPrint pull-right"><i class="glyphicon glyphicon-print"></i>  Печать </a>'+
                         '</div>' +
                         '<div class="form-group col-xs-9">' +
-                        '    <label class="checkbox-inline">' +
-                        '      <input class="checkDebt" type="checkbox"> Долг' +
-                        '    </label>' +
+                        //'    <label class="checkbox-inline">' +
+                        //'      <input class="checkDebt" type="checkbox"> Долг' +
+                        //'    </label>' +
                         '    <label class="checkbox-inline">' +
                         '      <input class="checkTerm" type="checkbox"> Терминал' +
                         '    </label>' +
-                        '<button class="btn btn-danger pull-right" type="button" id="closeExp"  >Закрыть</button>' +
+                        '<button class="btn btn-danger pull-right closeExp"  data-toggle="modal" data-target="#modal-sum"  type="button" >Закрыть</button>' +
                         '</div>'+
                         '</td>'+
                         '</tr>'+
@@ -142,7 +156,7 @@
                         '</form>' +
                         '</div>';
                     $(".tab-content").append(strTabContent);
-                    $(".btnPrint").printPage();
+                    //$(".btnPrint").printPage();
                 }
             });
         }
@@ -150,6 +164,10 @@
             addTab();
 
         });
+		$(document).on("click",".btnPrint",function(){
+			$("#btnPrint").attr("data-href",$(this).attr("data-href")).click();
+			
+		});
         $(document).on('click','#addDebt',function () {
             var expSum = $(".tab-content .active .dataTable .summ").text();
             var discount = $(".tab-content .active .dataTable .discount").val();
@@ -181,7 +199,7 @@
             });
         });
 
-        $(document).on('click','#closeExp',function () {
+        $(document).on('click','#saveExp',function () {
             var expSum = $(".tab-content .active .dataTable .summ").text();
             var discount = $(".tab-content .active .dataTable .discount").val();
             $.ajax({
@@ -192,6 +210,7 @@
                     $(".nav-tabs li.active").remove();
                     $("#"+globExpId).remove();
                     closeExp();
+		 $("#modal-sum").modal("hide");
                 }
             });
         });
@@ -222,11 +241,11 @@
                 $("#debtComment").slideDown("slow");
                 $("#termSum").slideUp("slow");
                 $(".checkTerm").prop( "checked", false );
-                $("#closeExp").addClass("hidden");
+                $(".closeExp").addClass("hidden");
             }
             else{
                 $("#debtComment").slideUp("slow");
-                $("#closeExp").removeClass("hidden");
+                $(".closeExp").removeClass("hidden");
             }
         });
 
@@ -235,11 +254,11 @@
                 $("#termSum").slideDown("slow");
                 $("#debtComment").slideUp("slow");
                 $(".checkDebt").prop( "checked", false );
-                $("#closeExp").addClass("hidden");
+                $(".closeExp").addClass("hidden");
             }
             else{
                 $("#termSum").slideUp("slow");
-                $("#closeExp").removeClass("hidden");
+                $(".closeExp").removeClass("hidden");
             }
         });
 
@@ -424,7 +443,7 @@
 
         $(document).ready(function(){
 
-            $(".btnPrint").printPage();
+            $("#btnPrint").printPage();
             $(".expCheck").printPage();
             $(".cntPlus").cntChange();
         });
@@ -440,6 +459,29 @@
     <!--/*****      --------------Modal windows------------     ******/-->
 
 </div>
+
+    <div class="modal fade bs-example-modal-sm" id="modal-sum"  tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="mysModalLabel">Сумма</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+					<h3 id='expSums'></h3>
+                    <input type="text" value="" id="expSumHide" style="display: none">
+                    <input type="text" value="" id="expsId" style="display: none">
+                    <input type="number" id="summs" class="form-control"/>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                    <button type="button" id="saveExp" class="btn btn-primary">Сохранить</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
 
 <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
     <div class="modal-dialog modal-lg" role="document">
