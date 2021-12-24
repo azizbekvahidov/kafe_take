@@ -518,7 +518,6 @@ class ExpenseController extends SetupController
                 echo $expId;
 
             } catch (Exception $e) {
-
                 //$transaction->rollBack();
                 Yii::app()->user->setFlash('error', "{$e->getMessage()}");
                 //$this->refresh();
@@ -597,7 +596,7 @@ class ExpenseController extends SetupController
                                 ), 'order_id = :id', array(':id' => $model['order_id']));
                             }
                             $expense->addExpenseList($temp[1],$types,date("Y-m-d"),$count - $model["count"]);
-                            Yii::app()->db->createCommand()->update('expense',array('expSum'=>$_POST['expSum'],'banket'=>$_POST['banket']),'expense_id = :id',array(':id'=>$expId));
+                            Yii::app()->db->createCommand()->update('expense',array('expSum'=>$_POST['expSum'],'banket'=>$_POST['banket'],'discount'=>$_POST['discount']),'expense_id = :id',array(':id'=>$expId));
                         } 
                         else{
                             Yii::app()->db->createCommand()->update('orders', array(
@@ -1199,14 +1198,14 @@ class ExpenseController extends SetupController
 
     public function actionPrintExpCheck($exp){
         $percent = Yii::app()->config->get('percent');
+		
         $expense = Yii::app()->db->createCommand()
-            ->select('ex.order_date,emp.name,ex.expense_id,ex.banket,t.name as Tname,emp.check_percent')
+            ->select('ex.order_date,emp.name,ex.expense_id,ex.banket,emp.check_percent,ex.discount')
             ->from('expense ex')
             ->join('employee emp','emp.employee_id = ex.employee_id')
-            ->join('tables t','t.table_num = ex.table')
+            //->join('tables t','t.table_num = ex.table')
             ->where('ex.expense_id = :id ',array(':id'=>$exp))
             ->queryRow();
-            
                 Yii::app()->db->createCommand()->update("expense",array(
                     'print' => 1
                 ),"expense_id = :id",array(":id"=>$exp));

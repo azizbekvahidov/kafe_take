@@ -950,8 +950,6 @@ class Expense extends CActiveRecord
     }
 
     public function addProd($prodId,$type,$date,$depId,$cnt){
-        $storage = new Storage();
-        $storage->removeToStorageDep($prodId,$cnt,$type,$depId);
         $model = Yii::app()->db->createCommand()
             ->select()
             ->from("expense_list")

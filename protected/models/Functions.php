@@ -532,13 +532,12 @@ class Functions {
                         foreach ($dishes as $val) {
                             $core=explode(':', $val);
                             $model=Yii::app()->db->createCommand()
-                                ->select('d.name as dName, dep.name as depName, dep.printer as printer')
+                                ->select('d.name as dName, dep.name as depName')
                                 ->from('dishes d')
                                 ->join('department dep', 'dep.department_id = d.department_id')
                                 ->where('d.dish_id = :id', array(':id'=>$core[0]))
                                 ->queryRow();
                             $resultArchive[$model['depName']][$model['dName']]=$core[1];
-                            $print[$model['depName']] = $model['printer'];
                         }
                     }
                     if ($temporary[0] == 'stuff') {
@@ -546,13 +545,12 @@ class Functions {
                         foreach ($dishes as $val) {
                             $core=explode(':', $val);
                             $model=Yii::app()->db->createCommand()
-                                ->select('h.name as dName, dep.name as depName, dep.printer as printer')
+                                ->select('h.name as dName, dep.name as depName')
                                 ->from('halfstaff h')
                                 ->join('department dep', 'dep.department_id = h.department_id')
                                 ->where('h.halfstuff_id = :id', array(':id'=>$val))
                                 ->queryRow();
                             $resultArchive[$model['depName']][$model['dName']]=$core[1];
-                            $print[$model['depName']] = $model['printer'];
                         }
                     }
                     if ($temporary[0] == 'prod') {
@@ -560,13 +558,12 @@ class Functions {
                         foreach ($dishes as $val) {
                             $core=explode(':', $val);
                             $model=Yii::app()->db->createCommand()
-                                ->select('p.name as dName, dep.name as depName, dep.printer as printer')
+                                ->select('p.name as dName, dep.name as depName')
                                 ->from('products p')
                                 ->join('department dep', 'dep.department_id = p.department_id')
                                 ->where('p.product_id = :id', array(':id'=>$val))
                                 ->queryRow();
                             $resultArchive[$model['depName']][$model['dName']]=$core[1];
-                            $print[$model['depName']] = $model['printer'];
                         }
                     }
                 }

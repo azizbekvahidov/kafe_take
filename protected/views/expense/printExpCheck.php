@@ -125,6 +125,19 @@
         <th></th>
         <th class="right" colspan="2"><?=number_format(($summ)/100,0,',','')*100?></th>
     </tr>
+	
+	<?if($expense["discount"] != null) {?>
+    <tr>
+        <th colspan="1">Скидка : </th>
+        <th></th>
+        <th class="right" colspan="2"><?=$expense["discount"]?>%</th>
+    </tr>
+	<?}?>
+	
+        </table>
+        <div class="result">
+            Итог : <?=number_format(($summ - $summ / 100 * $expense['discount'])/100,0,',','')*100?>
+        </div>
 <?if($check != 0){
     if($expense["banket"] == 1){?>
         <tr>
@@ -140,12 +153,8 @@
             <th colspan="1"> Обслуживание </th>
             <th class="right" colspan="2"><?=number_format(($summ/100*$percent)/100,0,',','')*100?></th>
         </tr>
-        </table>
-        <div class="result">
-            Итог : <?=number_format(($summ/100*$percent + $summ)/100,0,',','')*100?>
-        </div>
     <?}?>
 <?} else{?>
 
-    </table>
+   
 <?}?>
