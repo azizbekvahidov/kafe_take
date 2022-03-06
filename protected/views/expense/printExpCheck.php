@@ -44,20 +44,44 @@
         }
         .result{
             font-size:26px;
+			font-weight: bold;
+            text-align: center;
+        }
+        #footer_text{
+            font-size:18px;
+			font-weight: bold;
             text-align: center;
         }
     </style>
 
     <h3 class="text-center"><?=Yii::app()->config->get("name")?></h3>
     <h6 class="text-center"><?=date('d.m.Y')?><br><?=date("H:i:s")?></h6>
+	<div class="text-center">Счет №: <span style="font-size: 28px; font-weight: bold;"><?=$expense['expense_id']?></span></div>
     <table class="">
+        <? if(!empty($delivery)){?>
+            <tr>
+                <th colspan="3">Телефон: <span style="font-size: 18px;"><?=$delivery['phone']?></span></th>
+            </tr>
+            <tr>
+                <th colspan="3">Время доставки: <?=$delivery['delivery_time']?></th>
+            </tr>
+            <tr>
+                <th colspan="3">Адрес: <span style="font-size: 18px;"><?=$delivery['address']?></span></th>
+            </tr>
+        <?}else{?>
+            <th class="right" colspan="2">Стол №: <?=$expense['Tname']?></th>
+        <?}?>
         <tr>
-            <th colspan="1">Открыт <?=$expense['order_date']?></th>
-            <th class="right" colspan="2">Счет № <?=$expense['expense_id']?></th>
+            <th colspan="1">Открыт: <?=$expense['order_date']?></th>
+            <th class="right" colspan="2"></th>
         </tr>
         <tr>
-            <th colspan="1">Официант <?=$expense['name']?></th>
-            <th class="right" colspan="2">Стол № <?=$expense['Tname']?></th>
+            <th colspan="1">Ответственный: <?=$expense['name']?></th>
+            <? if(!empty($delivery)){?>
+                <th class="right" colspan="2">Доставка</th>
+            <?}else{?>
+                <th class="right" colspan="2">Стол №: <?=$expense['Tname']?></th>
+            <?}?>
         </tr>
     </table>
     <table class="dashedtable">
@@ -125,36 +149,55 @@
         <th></th>
         <th class="right" colspan="2"><?=number_format(($summ)/100,0,',','')*100?></th>
     </tr>
-	
-	<?if($expense["discount"] != null) {?>
-    <tr>
-        <th colspan="1">Скидка : </th>
-        <th></th>
-        <th class="right" colspan="2"><?=$expense["discount"]?>%</th>
-    </tr>
-	<?}?>
-	
-        </table>
-        <div class="result">
-            Итог : <?=number_format(($summ - $summ / 100 * $expense['discount'])/100,0,',','')*100?>
-        </div>
 <?if($check != 0){
     if($expense["banket"] == 1){?>
         <tr>
             <th colspan="1"> Обслуживание 15%</th>
             <th class="right" colspan="2"><?=number_format(($summ/100*15)/100,0,',','')*100?></th>
         </tr>
-        </table>
-        <div class="result">
-            Итог : <?=number_format(($summ/100*15 + $summ)/100,0,',','')*100?>
-        </div>
-    <?} else{?>
+    <? $itog = number_format(($summ/100*15 + $summ)/100,0,',','')*100;
+
+    } else{?>
         <tr>
             <th colspan="1"> Обслуживание </th>
             <th class="right" colspan="2"><?=number_format(($summ/100*$percent)/100,0,',','')*100?></th>
         </tr>
+        <? $itog = number_format(($summ/100*$percent + $summ)/100,0,',','')*100?>
     <?}?>
-<?} else{?>
 
-   
-<?}?>
+
+<?} else{
+    if(!empty($delivery)){?>
+        <tr>
+            <th colspan="1"> Сумма доставки</th>
+            <th class="right" colspan="2"><?=number_format($delivery["price"],0,',','')?></th>
+        </tr>
+        <? $summ += $delivery["price"];
+        $itog = number_format($summ,0,',',''); ?>
+    <?}
+    else{
+        $itog = number_format($summ,0,',','');
+    }
+
+}?>
+</table>
+<div class="result">
+    Итог : <?=$itog?>
+</div>
+
+<h4 class="text-center">Оставьте пожалуйста свой отзыв по пятибальной шкале от 1 до 5</h4>
+<div style="margin-right: 1%;">
+    <ul style="list-style: none; text-align: right">
+        <li>Еда: ______</li>
+        <li>Обслуживание: ______</li>
+        <li>Чистота: ______</li>
+        <li>Атмосфера: ______</li>
+        <li>Цена: ______</li>
+    </ul>
+</div>
+
+
+
+<p id="footer_text">
+    <?=preg_replace( "#\r?\n#", "<br />", Yii::app()->config->get("text_footer") );?>
+</p>

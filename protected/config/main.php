@@ -6,9 +6,9 @@
 // CWebApplication properties can be configured here.
 return array(
 	'basePath'=>dirname(__FILE__).DIRECTORY_SEPARATOR.'..',
-	'name'=>'KIF Foods',
+	'name'=>'Shams Foods',
     'language'=>'ru',
-
+    
     'aliases'=>array(
 //		'bootstrap'=> realpath(__DIR__.'/../extensions/yiibooster'),
 	),
@@ -86,11 +86,11 @@ return array(
 					'levels'=>'error, warning, info',
 				),
 				// uncomment the following to show log messages on web pages
-
+				
 				/*array(
 					'class'=>'CWebLogRoute',
 				),
-
+				
 			),
 		),*/
 //        'bootstrap'=>array(
@@ -101,7 +101,7 @@ return array(
 //		),
 		'themeManager'=>array(
 			'basePath'=>'protected/extensions',
-		),
+		), 
 
 	),
 

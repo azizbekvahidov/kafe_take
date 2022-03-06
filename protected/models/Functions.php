@@ -1,5 +1,5 @@
 <?
-require_once Yii::app()->basePath . '/library/printer/autoload.php';
+require_once Yii::app()->basePath . '/../vendor/autoload.php';
 use Mike42\Escpos\Printer;
 use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
 use Mike42\Escpos\EscposImage;
@@ -465,10 +465,11 @@ class Functions {
         return $summ;
     }
 
-    public function PrintCheck($expId,$action,$id,$user,$count,$table){
+    public function PrintCheck($expId,$action,$id,$user,$count,$table,$delivery,$comment){
         $result = array();
         $depId = array();
         $archive = new ArchiveOrder();
+        $comments = array();
         $resultArchive = array();
         $user = Yii::app()->db->createCommand()
             ->select('')
@@ -490,6 +491,7 @@ class Functions {
                             ->where('d.dish_id = :id', array(':id' => $expl[1]))
                             ->queryRow();
                         $result[$model['depName']][$model['dName']] = $count[$key];
+                        $comments[$model['depName']][$model['dName']].=$comment[$key];
                         $print[$model['depName']] = $model['printer'];
                     }
                     if($expl[0] == 'stuff'){
@@ -500,6 +502,7 @@ class Functions {
                             ->where('h.halfstuff_id = :id',array(':id'=>$expl[1]))
                             ->queryRow();
                         $result[$model['depName']][$model['dName']] = $count[$key];
+                        $comments[$model['depName']][$model['dName']].=$comment[$key];
                         $print[$model['depName']] = $model['printer'];
                     }
                     if($expl[0] == 'product'){
@@ -510,6 +513,7 @@ class Functions {
                             ->where('p.product_id = :id',array(':id'=>$expl[1]))
                             ->queryRow();
                         $result[$model['depName']][$model['dName']] = $count[$key];
+                        $comments[$model['depName']][$model['dName']].=$comment[$key];
                         $print[$model['depName']] = $model['printer'];
                     }
                 }
@@ -580,6 +584,7 @@ class Functions {
                                 ->where('d.dish_id = :id', array(':id' => $expl[1]))
                                 ->queryRow();
                             $result[$model['depName']][$model['dName']] = $count[$key];
+                            $comments[$model['depName']][$model['dName']].=$comment[$key];
                             $print[$model['depName']] = $model['printer'];
                             break;
                         case 'stuff':
@@ -590,6 +595,7 @@ class Functions {
                                 ->where('h.halfstuff_id = :id',array(':id'=>$expl[1]))
                                 ->queryRow();
                             $result[$model['depName']][$model['dName']] = $count[$key];
+                            $comments[$model['depName']][$model['dName']].=$comment[$key];
                             $print[$model['depName']] = $model['printer'];
                             break;
                         case 'product':
@@ -600,6 +606,7 @@ class Functions {
                                 ->where('p.product_id = :id',array(':id'=>$expl[1]))
                                 ->queryRow();
                             $result[$model['depName']][$model['dName']] = $count[$key];
+                            $comments[$model['depName']][$model['dName']].=$comment[$key];
                             $print[$model['depName']] = $model['printer'];
                             break;
                     }
@@ -619,14 +626,14 @@ class Functions {
                 'printer' => $print[$key],
             ));
             $lastId = Yii::app()->db->getLastInsertID();
-            $this->PrintChecks($print,$val,$lastId,$user,$table,$key,$date,$expId);
+            $this->PrintChecks($print,$val,$lastId,$user,$table,$key,$date,$expId,$delivery,$comments[$key]);
         }
 
     }
 
 
 
-    public function PrintChecks($print,$val,$lastId,$user,$table,$key,$date, $expId){
+    public function PrintChecks($print,$val,$lastId,$user,$table,$key,$date, $expId,$delivery,$comment){
         try {
             if (!empty($print[$key])) {
 
@@ -657,6 +664,10 @@ class Functions {
                         foreach ($val as $keys=>$value) {
                             $order = new item($keys, $value);
                             $printer -> text($order);
+                            if($comment[$keys] != "") {
+                                $printer->text($comment[$keys]);
+                            }
+                            $printer->feed();
                         }
                         $printer->setJustification(Printer::JUSTIFY_CENTER);
                         $printer->text("-------------------\n");
@@ -668,11 +679,18 @@ class Functions {
 
                         $printer->setTextSize(2, 1);
 
-                        $printer->text("----на вынос----");
+                        if($delivery["phone"] != '')
+                            $printer->text("-----На вынос------");
+                        else
+                            $printer->text("-----Доставка------");
 
                         $printer->setTextSize(1, 1);
 
                         /* Footer */
+                        if($delivery["phone"] != '') {
+                            $printer->text("Время : ".$delivery["time"]. "\n");
+                            $printer->text("Комментарий к заказу: ".$delivery["comment"]. "\n");
+                        }
                         $printer->feed(1);
                         $printer->text($date . "\n");
                         //$printer->text("------------------" . "\n");
@@ -686,7 +704,8 @@ class Functions {
                     case 80:
                         $printer ->setPrintWidth(800);
                         $printer->setJustification(Printer::JUSTIFY_CENTER);
-                        $printer->text("Счет № ".$expId."\n");
+                        $printer->text("Счет № ");
+                        $printer->text($expId."\n");
                         $printer->setJustification(Printer::JUSTIFY_LEFT);
                         $printer->setTextSize(2, 2);
                         $printer->text($key);
@@ -698,6 +717,10 @@ class Functions {
                         foreach ($val as $keys=>$value) {
                             $order = new item($keys, $value);
                             $printer -> text($order);
+                            if($comment[$keys] != "") {
+                                $printer->text($comment[$keys]);
+                            }
+                            $printer->feed();
                         }
                         $printer->setJustification(Printer::JUSTIFY_CENTER);
                         $printer->text("-------------------\n");
@@ -708,12 +731,18 @@ class Functions {
                         $printer->text($user["name"]."\n");
 
                         $printer->setTextSize(2, 1);
-
-                        $printer->text("----на вынос----");
+                        if($delivery["phone"] == '')
+                            $printer->text("-----На вынос------");
+                        else
+                            $printer->text("-----Доставка------");
 
                         $printer->setTextSize(1, 1);
 
                         /* Footer */
+                        if($delivery["phone"] != '') {
+                            $printer->text("Время доставки: ".$delivery["time"]. "\n");
+                            $printer->text("Комментарий к заказу: ".$delivery["comment"]. "\n");
+                        }
                         $printer->feed(1);
                         $printer->text($date . "\n");
                         //$printer->text("------------------" . "\n");
@@ -733,7 +762,7 @@ class Functions {
                     "actions"=>"printException",
                     "table_name"=>"",
                     "curId"=>0,
-                    "message"=>"Printer name  is empty",
+                    "message"=>"Printer name  is empty ".$key,
                     "count"=>0
                 ));
             }
@@ -745,7 +774,7 @@ class Functions {
                 "actions"=>"printException",
                 "table_name"=>"",
                 "curId"=>0,
-                "message"=>$exception->getMessage(),
+                "message"=>$exception->getMessage()."  => catch",
                 "count"=>0
             ));
         }

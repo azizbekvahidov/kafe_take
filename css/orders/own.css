@@ -1,13 +1,13 @@
 
-#addBtn{
+#navsMenu{
     position: absolute;
-    top: 4px;
+    top: 0px;
     right: 15px;
     font-size: 15px;
     font-weight: bold;
     color: black;
 }
-
+/*bu yerda remove knopkasini xususiyati*/
 .removed{
     line-height: 2vh;
     font-size: 2vh;
@@ -173,3 +173,6 @@ li.active.change a{
 #termSum{
     z-index: 9999;
 }
+#avansSum {
+     z-index: 9999;
+ }

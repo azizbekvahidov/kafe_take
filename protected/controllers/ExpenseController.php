@@ -21,7 +21,17 @@ class ExpenseController extends SetupController
     {
         return array(
             array('allow', // allow admin user to perform 'admin' and 'delete' actions
-                'actions'=>array('SaveCost','closeExp','getPrice','printExpCheck','checkTable','getCurTables','ChangeTable','removeEx','RemoveFromOrder','addToOrder','printCheck','orders','tables','login','create','update','checkOrder','checkExpense','ckeckOrder','lists','upLists','todayOrder','checkBeginOrder'),
+                'actions'=>array(
+                    'SaveCost','closeExp','closeAvans','getPrice',
+                    'printExpCheck','checkTable','getCurTables',
+                    'ChangeTable','removeEx','RemoveFromOrder',
+                    'addToOrder','printCheck','orders',
+                    'tables','login','create',
+                    'update','checkOrder','checkExpense',
+                    'ckeckOrder','lists','upLists',
+                    'todayOrder','checkBeginOrder','createDelivery',
+                    'closedAvans','deletedAvans','setDiscount'
+                    ),
                 'roles'=>array(),
             ),
             array('allow', // allow admin user to perform 'admin' and 'delete' actions
@@ -39,6 +49,23 @@ class ExpenseController extends SetupController
             array('deny',  // deny all users
                 'users'=>array('*'),
             ),
+        );
+    }
+
+    public function actionClosedAvans(){
+        $func = new Functions();
+        $func->getExpenseCostPrice($_POST["id"],date('Y-m-d'));
+        Yii::app()->db->createCommand()->update('expense',array(
+            "order_date" => date("Y-m-d H:i:s"),
+        ),
+            'expense_id = :id',
+            array(':id'=>$_POST["id"])
+        );
+    }
+    public function actionDeletedAvans(){
+        Yii::app()->db->createCommand()->delete('expense',
+            'expense_id = :id',
+            array(':id'=>$_POST["id"])
         );
     }
 
@@ -183,7 +210,7 @@ class ExpenseController extends SetupController
 
             $sum=number_format(($_POST['sum'] + $_POST['sum'] * $percent->getPercent(date("Y-m-d")) / 100) / 100, 0, ',', '') * 100;
         }
-        //$func->getExpenseCostPrice($_POST["id"],date('Y-m-d'));
+        $func->getExpenseCostPrice($_POST["id"],date('Y-m-d'));
         if($_POST["paid"] == "debt"){
             Yii::app()->db->createCommand()->update("expense",array(
                 'status'=>1,
@@ -199,6 +226,7 @@ class ExpenseController extends SetupController
                 'status' => 0,
                 'expSum'=>$_POST["sum"]-$_POST["discount"],
                 'discount'=>$_POST["discount"],
+                'endTime' => date("Y-m-d H:i:s")
             ),"expense_id = :id",array(":id"=>$_POST["id"]));
         }
         elseif ($_POST["paid"] == "term"){
@@ -208,6 +236,7 @@ class ExpenseController extends SetupController
                     'terminal' => $_POST['text'],
                     'expSum'=>$_POST["sum"]-$_POST["discount"],
                     'discount'=>$_POST["discount"],
+                    'endTime' => date("Y-m-d H:i:s")
                 ),"expense_id = :id",array(":id"=>$_POST["id"]));
             }
             else{
@@ -216,6 +245,7 @@ class ExpenseController extends SetupController
                     'terminal' => $_POST["sum"],
                     'expSum'=>$_POST["sum"]-$_POST["discount"],
                     'discount'=>$_POST["discount"],
+                    'endTime' => date("Y-m-d H:i:s")
                 ),"expense_id = :id",array(":id"=>$_POST["id"]));
             }
 //            if($_POST["types"] == "true"){
@@ -437,6 +467,186 @@ class ExpenseController extends SetupController
          echo $expId;
      }
 
+    public function actionCloseAvans(){
+        if($_POST["discount"] == ""){
+            $_POST["discount"] = 0;
+        }
+
+        $expense = new Expense();
+        $model=new Expense;
+        $func = new Functions();
+        $percent = new Percent();
+        $sum = 0;
+        try{
+            $function = new Functions();
+            $dishMsg = '*dish=>';
+            $stuffMsg = '*stuff=>';
+            $prodMsg = '*prod=>';
+            $dishMessage = '';
+            $stuffMessage = '';
+            $prodMessage = '';
+            $archive_message = '';
+            $expId = intval($_POST['expenseId']);
+            $delivery["time"] = $_POST["deliveryTime"];
+            $delivery["comment"] = $_POST["deliveryComment"];
+            $delivery["time"] = $_POST["deliveryTime"];
+            $delivery["phone"] = $_POST["deliveryPhone"];
+            Yii::app()->db->createCommand()->update('expense',array(
+                    'expSum'=>$_POST['expSum'],
+                    "phone"=>$_POST["phone"],
+                    "ready_time"=>$_POST["ready_time"],
+                    "prepaid" => 1,
+                    "comment" => $_POST["text"],
+                    "prepaidSum" => $_POST["paidAvans"],
+                    "prepCreate" => time(),
+                    "order_date" => "2000-01-01 00:00:00",
+                    "status" => 0,
+                ),
+                'expense_id = :id',
+                array(':id'=>$expId)
+            );
+            if($_POST["ready_time"] != ""){
+                $delivery["time"] = $_POST["ready_time"];
+            }
+            $refuseTime = date('Y-m-d H:i:s');
+//                Yii::app()->db->createCommand()->update("orders",array(
+//                    'count' => 0,
+//                    'deleted' => 1
+//                ),'expense_id = '.$expId);
+            foreach ($_POST['id'] as $key => $val) {
+                $count = floatval($_POST['count'][$key]);
+
+                $types = 0;
+
+                $temp = explode('_',$val);
+                if($temp[0] == 'dish') {
+                    $types = 1;
+                    $dishMessage .= $temp[1].":".$count.",";
+                }
+                if($temp[0] == 'stuff') {
+                    $types = 2;
+                    $stuffMessage .= $temp[1].":".$count.",";
+                }
+                if($temp[0] == 'product') {
+                    $types = 3;
+                    $prodMessage .= $temp[1].":".$count.",";
+                }
+
+                $model = Yii::app()->db->createCommand()
+                    ->select()
+                    ->from('orders o')
+                    ->where('o.expense_id = :id AND o.just_id = :just_id AND o.type = :types ',array(':id'=>$expId,':just_id'=>$temp[1],':types'=>$types))
+                    ->queryRow();
+//                    echo "<------------------------------------------------------------------------>";
+                if(!empty($model)){
+
+                    if($count != 0) {
+                        if ($model['count'] < $count) {
+                            Yii::app()->db->createCommand()->update('orders', array(
+                                'count' => $count,
+                                'deleted'=>0
+                            ), 'order_id = :id', array(':id' => $model['order_id']));
+                        }
+                        if(($model['count'] > $count && $model['deleted'] == 1) || ($model['count'] == $count && $model['deleted'] == 1)){
+                            Yii::app()->db->createCommand()->update('orders', array(
+                                'count' => $count,
+                                'deleted'=>0
+                            ), 'order_id = :id', array(':id' => $model['order_id']));
+                        }
+                        else{
+                            Yii::app()->db->createCommand()->update('orders', array(
+                                'count' => $count,
+                                'deleted'=>0
+                            ), 'order_id = :id', array(':id' => $model['order_id']));
+                        }
+                        $expense->addExpenseList($temp[1],$types,date("Y-m-d"),$count - $model["count"]);
+                        Yii::app()->db->createCommand()->update('expense',array('expSum'=>$_POST['expSum'],'banket'=>$_POST['banket']),'expense_id = :id',array(':id'=>$expId));
+                    }
+                    else{
+                        Yii::app()->db->createCommand()->update('orders', array(
+                            'deleted' => 1
+                        ), 'order_id = :id', array(':id' => $model['order_id']));
+                        $expense->addExpenseList($temp[1],$types,date("Y-m-d"),$count - $model["count"]);
+
+                    }
+                }
+                else{
+                    // echo "<pre>";
+                    // print_r($_POST);
+                    // echo "</pre>";
+                    Yii::app()->db->createCommand()->insert('orders',array(
+                        'expense_id'=>$expId,
+                        'just_id'=>$temp[1],
+                        'count'=>$count,
+                        'type'=>$types
+                    ));
+                    $order_id = Yii::app()->db->getLastInsertID();
+                    Yii::app()->db->createCommand()->insert('orderRefuse',array(
+                        'order_id'=>$order_id,
+                        'count'=>$count,
+                        'add'=>1,
+                        'not_time'=>$refuseTime,
+                        'refuse_time'=>$refuseTime
+                    ));
+                    $expense->addExpenseList($temp[1],$types,date("Y-m-d"),$count - $model["count"]);
+                }
+            }
+            $refuse = Yii::app()->db->createCommand()
+                ->select()
+                ->from('orders')
+                ->where('expense_id = :id AND deleted = 1 AND status = 1 AND count != 0',array(':id'=>$expId))
+                ->queryAll();
+            if(!empty($refuse)){
+                foreach ($refuse as $val) {
+                    Yii::app()->db->createCommand()->update('orders',array(
+                        'count'=>0,
+                    ), 'order_id = :id',array(':id'=>$val['order_id']));
+                }
+            }
+
+            if(!empty($tempModel)){
+                foreach ($tempModel as $val) {
+                    Yii::app()->db->createCommand()->update('orders',array(
+                        'status'=>$val['status'],
+                        'deleted'=>$val['deleted']
+                    ), 'order_id = :id',array(':id'=>$val['order_id']));
+                }
+            }
+            $archive_message .= ((!empty($dishMessage)) ? $dishMsg.$dishMessage : '').((!empty($stuffMessage)) ? $stuffMsg.$stuffMessage : '').((!empty($prodMessage)) ? $prodMsg.$prodMessage : '');
+
+            $archive = new ArchiveOrder();
+            $archive->setArchive('update', $expId, $archive_message,$_POST['employee_id']);
+
+//            $func->printCheck($expId,'update',$_POST['id'],$_POST['employee_id'],$_POST['count'],$_POST['table'],$delivery,$_POST["comment"]);
+//                echo $expId;
+        }
+        catch (Exception $e){
+            echo "<pre>";
+            print_r($e->getMessage());
+            echo "</pre>";
+            Yii::app()->user->setFlash('error', "{$e->getMessage()}");
+            //$this->refresh();
+        }
+    }
+
+    public function actionSetDiscount(){
+        $expense = Yii::app()->db->CreateCommand()
+            ->select()
+            ->from("expense")
+            ->where("expense_id = :id",array(":id"=>$_POST["id"]))
+            ->queryRow();
+        Yii::app()->db->createCommand()->update("expense",array(
+            "discount"=>$_POST["val"]
+        ),"expense_id = :id",array(":id"=>$_POST["id"]));
+        $model = Yii::app()->db->CreateCommand()
+            ->select("count(*) as cnt")
+            ->from("orders")
+            ->where("expense_id = :id",array(":id"=>$_POST["id"]))
+            ->queryRow();
+        Yii::app()->db->createCommand()->update("orders",array(
+            "discount"=>$_POST["val"]/$model["cnt"]
+        ),"expense_id = :id",array(":id"=>$_POST["id"]));
+    }
     public function actionCreate()
     {
         $expense = new Expense();
@@ -499,7 +709,7 @@ class ExpenseController extends SetupController
                         'count'=>$count,
                         'type'=>$types
                     ));
-                    $expense->addExpenseList($temp[1],$types,date("Y-m-d"),$count);
+                    //$expense->addExpenseList($temp[1],$types,date("Y-m-d"),$count);
                     $order_id = Yii::app()->db->getLastInsertID();
                     Yii::app()->db->createCommand()->insert('orderRefuse',array(
                         'order_id'=>$order_id,
@@ -518,6 +728,7 @@ class ExpenseController extends SetupController
                 echo $expId;
 
             } catch (Exception $e) {
+
                 //$transaction->rollBack();
                 Yii::app()->user->setFlash('error', "{$e->getMessage()}");
                 //$this->refresh();
@@ -534,19 +745,35 @@ class ExpenseController extends SetupController
                 $prodMessage = '';
                 $archive_message = '';
                 $expId = intval($_POST['expenseId']);
-                if($_POST['banket'] == 0){
-                    $_POST['expSum']=number_format(($_POST['expSum'] + $_POST['expSum'] * $percent->getPercent(date("Y-m-d")) / 100) / 100, 0, ',', '') * 100;
+                $delivery["time"] = $_POST["deliveryTime"];
+                $delivery["comment"] = $_POST["deliveryComment"];
+                $delivery["time"] = $_POST["deliveryTime"];
+                $delivery["phone"] = $_POST["deliveryPhone"];
+//                if($_POST['banket'] == 0){
+//                    $_POST['expSum']=number_format(($_POST['expSum'] + $_POST['expSum'] * $percent->getPercent(date("Y-m-d")) / 100) / 100, 0, ',', '') * 100;
+//                }
+//                else{
+//                    $_POST['expSum']=number_format(($_POST['expSum'] + $_POST['expSum'] * 15 / 100) / 100, 0, ',', '') * 100;
+//                }
+//                if($_POST["ready_time"] != ""){
+//                    $_POST["ready_time"] = date("H:i:s",strtotime($_POST["ready_time"]));
+//                }
+				Yii::app()->db->createCommand()->update('expense',array(
+				    'expSum'=>$_POST['expSum'],
+                    "phone"=>$_POST["phone"],
+                    "ready_time"=>$_POST["ready_time"]
+                ),
+                    'expense_id = :id',array(':id'=>$expId));
+                if($_POST["ready_time"] != ""){
+                    $delivery["time"] = $_POST["ready_time"];
                 }
-                else{
-                    $_POST['expSum']=number_format(($_POST['expSum'] + $_POST['expSum'] * 15 / 100) / 100, 0, ',', '') * 100;
-                }
-				//Yii::app()->db->createCommand()->update('expense',array('expSum'=>$_POST['expSum'],'banket'=>$_POST['banket']),'expense_id = :id',array(':id'=>$expId));
-                
                 $refuseTime = date('Y-m-d H:i:s');
-                Yii::app()->db->createCommand()->update("orders",array(
-                    'count' => 0,
-                    'deleted' => 1
-                ),'expense_id = '.$expId);
+//                Yii::app()->db->createCommand()->update("orders",array(
+//                    'count' => 0,
+//                    'deleted' => 1
+//                ),'expense_id = '.$expId);        die();
+                // $archive = new ArchiveOrder()
+                // $archive->setArchive('update', $expId, $archive_message,$_POST['employee_id']);
                 foreach ($_POST['id'] as $key => $val) {
                     $count = floatval($_POST['count'][$key]);
 
@@ -568,9 +795,10 @@ class ExpenseController extends SetupController
 
                     $model = Yii::app()->db->createCommand()
                         ->select()
-                        ->from('orders')
-                        ->where('expense_id = :id AND just_id = :just_id AND type = :types ',array(':id'=>$expId,':just_id'=>$temp[1],':types'=>$types))
+                        ->from('orders o')
+                        ->where('o.expense_id = :id AND o.just_id = :just_id AND o.type = :types ',array(':id'=>$expId,':just_id'=>$temp[1],':types'=>$types))
                         ->queryRow();
+//                    echo "<------------------------------------------------------------------------>";
                     if(!empty($model)){
 
                         if($count != 0) {
@@ -595,8 +823,17 @@ class ExpenseController extends SetupController
                                     'deleted'=>0
                                 ), 'order_id = :id', array(':id' => $model['order_id']));
                             }
+//                            echo "<pre>";
+//                            print_r("prod_id => ".$temp[1]);
+//                            echo "</pre>";
+//                            echo "<pre>";
+//                            print_r("getCount => ".$count);
+//                            echo "</pre>";
+//                            echo "<pre>";
+//                            print_r("modelCount => ".$model["count"]);
+//                            echo "</pre>";
                             $expense->addExpenseList($temp[1],$types,date("Y-m-d"),$count - $model["count"]);
-                            Yii::app()->db->createCommand()->update('expense',array('expSum'=>$_POST['expSum'],'banket'=>$_POST['banket'],'discount'=>$_POST['discount']),'expense_id = :id',array(':id'=>$expId));
+                            Yii::app()->db->createCommand()->update('expense',array('expSum'=>$_POST['expSum'],'banket'=>$_POST['banket']),'expense_id = :id',array(':id'=>$expId));
                         } 
                         else{
                             Yii::app()->db->createCommand()->update('orders', array(
@@ -648,16 +885,32 @@ class ExpenseController extends SetupController
                         ), 'order_id = :id',array(':id'=>$val['order_id']));
                     }
                 }
-                $archive_message .= ((!empty($dishMessage)) ? $dishMsg.$dishMessage : '').((!empty($stuffMessage)) ? $stuffMsg.$stuffMessage : '').((!empty($prodMessage)) ? $prodMsg.$prodMessage : '');
+               $archive_message .= ((!empty($dishMessage)) ? $dishMsg.$dishMessage : '').((!empty($stuffMessage)) ? $stuffMsg.$stuffMessage : '').((!empty($prodMessage)) ? $prodMsg.$prodMessage : '');
+//
+               $archive = new ArchiveOrder();
+               $archive->setArchive('update', $expId, $archive_message,$_POST['employee_id']);
 
-                $archive = new ArchiveOrder();
-                $archive->setArchive('update', $expId, $archive_message,$_POST['employee_id']);
-
-                $func->printCheck($expId,'update',$_POST['id'],$_POST['employee_id'],$_POST['count'],$_POST['table']);
+        // echo "<pre>";
+        // print_r($archive_message);
+        // echo "</pre>";
+        // die();
+                $func->printCheck($expId,'update',$_POST['id'],$_POST['employee_id'],$_POST['count'],$_POST['table'],$delivery,$_POST["comment"]);
 //                echo $expId;
             }
             catch (Exception $e){
-                Yii::app()->user->setFlash('error', "{$e->getMessage()}");
+                Yii::app()->db->createCommand()->insert("logs", array(
+                    "log_date"=>date("Y-m-d H:i:s"),
+                    "actions"=>"orderException",
+                    "table_name"=>"",
+                    "curId"=>$expId,
+                    "message"=>$e->getMessage(),
+                    "count"=>0
+                ));
+                http_response_code(500);
+//                echo "<pre>";
+//                print_r($e->getMessage());
+//                echo "</pre>";
+//                Yii::app()->user->setFlash('error', "{$e->getMessage()}");
                 //$this->refresh();
             }
 		}
@@ -1198,14 +1451,32 @@ class ExpenseController extends SetupController
 
     public function actionPrintExpCheck($exp){
         $percent = Yii::app()->config->get('percent');
-		
+        $delivery = array();
         $expense = Yii::app()->db->createCommand()
-            ->select('ex.order_date,emp.name,ex.expense_id,ex.banket,emp.check_percent,ex.discount')
+            ->select('ex.order_date,emp.name,ex.expense_id,ex.banket,t.name as Tname,emp.check_percent,ex.delivery_id')
             ->from('expense ex')
             ->join('employee emp','emp.employee_id = ex.employee_id')
-            //->join('tables t','t.table_num = ex.table')
+            ->join('tables t','t.table_num = ex.table')
             ->where('ex.expense_id = :id ',array(':id'=>$exp))
             ->queryRow();
+
+        if(empty($expense)){
+            $expense = Yii::app()->db->createCommand()
+                ->select('ex.order_date,emp.name,ex.expense_id,ex.banket,ex.table as Tname,emp.check_percent,ex.delivery_id')
+                ->from('expense ex')
+                ->join('employee emp','emp.employee_id = ex.employee_id')
+                ->where('ex.expense_id = :id ',array(':id'=>$exp))
+                ->queryRow();
+        }
+
+        if(intval($expense["delivery_id"]) != 0){
+            $delivery = Yii::app()->db->CreateCommand()
+                ->select()
+                ->from("delivery")
+                ->where("delivery_id = ".$expense["delivery_id"])
+                ->queryRow();
+
+        }
                 Yii::app()->db->createCommand()->update("expense",array(
                     'print' => 1
                 ),"expense_id = :id",array(":id"=>$exp));
@@ -1223,16 +1494,169 @@ class ExpenseController extends SetupController
             ->where('ex.expense_id = :expId AND ord.type = :types',array(':expId'=>$exp,':types'=>1))
             ->queryAll();*/
 
-
         $this->renderPartial('printExpCheck',array(
             'check'=>$expense['check_percent'],
             'model'=>$model,
             'model2'=>$model2,
             'model3'=>$model3,
             'expense'=>$expense,
-            'percent'=>$percent
+            'percent'=>$percent,
+            'delivery'=>$delivery
         ));
     }
 
+    public function actionCreateDelivery(){
+        Yii::app()->db->createCommand()->insert("delivery",array(
+            'phone'=>$_POST["deliveryPhone"],
+            'delivery_time'=>date("H:i:s",strtotime($_POST["deliveryTime"])),
+            'address'=>$_POST["deliveryAddress"],
+            'comment'=>$_POST["deliveryComment"],
+            'price'=>$_POST["deliveryPrice"],
+        ));
+        $id = Yii::app()->db->lastInsertID;
+        Yii::app()->db->createCommand()->update("expense",array(
+            'delivery_id'=>$id
+        ),'expense_id = '.$_POST["expId"]);
+    }
 
+    public function actionGetDeliveryData(){
+        $model["delivery"] = Yii::app()->db->CreateCommand()
+            ->select("d.phone,d.address,d.comment,d.price,d.delivery_time")
+            ->from("expense ex")
+            ->join("delivery d","d.delivery_id = ex.delivery_id")
+            ->where("ex.expense_id = ".$_POST["expId"])
+            ->queryRow();
+        $model["expense"] = Yii::app()->db->CreateCommand()
+            ->select()
+            ->from("expense ex")
+            ->where("ex.expense_id = ".$_POST["expId"])
+            ->queryRow();
+        echo json_encode($model);
+    }
+
+    public function actionCencelDelivery(){
+        $model = Yii::app()->db->CreateCommand()
+            ->select()
+            ->from("expense")
+            ->where("expense_id = ".$_POST["expId"])
+            ->queryRow();
+        Yii::app()->db->createCommand()->delete("delivery","delivery_id = ".$model["delivery_id"]);
+        Yii::app()->db->createCommand()->update("expense",array(
+            'delivery_id' => 0
+        ),"expense_id = ".$_POST["expId"]);
+    }
+
+    public function actionPrintReport(){
+//        $change = Yii::app()->db->CreateCommand()
+//            ->select()
+//            ->from("change")
+//            ->where("status != 0")
+//            ->queryRow();
+        $to = date("Y-m-d");
+//        $from = $change["start_time"];
+//        if(isset($_GET['dates'])){
+//            $to = date("Y-m-d H:i:s",strtotime(date("Y-m-d",strtotime($_GET['to']))." 23:59:59") + 3600);
+//            $from = date("Y-m-d H:i:s",strtotime($_GET['from']) + 3600);
+//        }
+//        else{
+//            $data = explode("-",$_POST['from']);
+//            $to = date("Y-m-d H:i:s",strtotime(date("Y-m-d",strtotime($data[1]))." 23:59:59") + 3600);
+//            $from = date("Y-m-d H:i:s",strtotime($data[0]) + 3600);
+//        }
+
+        $PERSENT = new Percent();
+        $expense = new Expense();
+//        $model = Employee::model()->findAll();
+        $cost = Yii::app()->db->createCommand()
+            ->select()
+            ->from("costs")
+            ->where("date(cost_date) = :to",array(':to'=>$to))
+            ->queryAll();
+        $debt = Yii::app()->db->CreateCommand()
+            ->select()
+            ->from("expense t")
+            ->where(' date(t.order_date) = :to AND (t.status = 1 OR t.status = 0) AND t.debt = 1 AND t.kind != 1 AND t.prepaid != 1',array(':to'=>$to))
+            ->queryAll();
+        $paidDebt = Yii::app()->db->CreateCommand()
+            ->select()
+            ->from("debt d")
+            ->join('expense ex','d.expense_id = ex.expense_id')
+            ->where(' date(d.d_date) = :to ',array(':to'=>$to))
+            ->queryAll();
+
+        $avans = Yii::app()->db->createCommand()
+            ->select("sum(t.prepaidSum) as prepaidSum")
+            ->from("expense t")
+            ->where('date(t.order_date) = :to AND t.prepaid = 1',array(':to'=>$to))
+            ->queryRow();
+            $term = 0;
+            $percent = 0;
+            $newModel = Yii::app()->db->createCommand()
+                ->select("sum(t.expSum) as expSum, sum(t.terminal) as terminal")
+                ->from("expense t")
+                ->where('(date(t.order_date) = :to) AND t.prepCreate = 0 AND t.status != 1 AND t.debt != 1 AND t.kind != 1 AND t.prepaid != 1',array(':to'=>$to))
+                ->queryRow();
+            $debtpaid = Yii::app()->db->createCommand()
+                ->select("sum(t.debtPayed) as debtPayed, sum(t.terminal) as terminal")
+                ->from("expense t")
+                ->where('date(t.order_date) = :to AND  t.debt != :debt AND t.kind != 1 AND t.prepaid != 1',array(':to'=>$to,':debt'=>0))
+                ->queryRow();
+            //echo $val->employee_id."<br>";
+            $temp = $newModel["expSum"];
+//            $empsum = $empsum + $temp;
+            $term += $newModel["terminal"];
+
+            $temp += $debtpaid["debtPayed"];
+
+            $term += $debtpaid["terminal"];
+
+//            foreach($debtpaid as $vale){
+//                if($val->check_percent == 1){
+//                    $percent = $PERSENT->getPercent(date('Y-m-d',strtotime($vale["order_date"])));
+//                    $empCnt++;
+//                }
+//                else{
+//                    $percent = 0;
+//                }
+//            }
+
+
+//            $sum["empId"][$val->name] = $val->employee_id;
+//            $sum['cost'][$val->name] = $empsum;
+//            $sum["clearSum"][$val->name] = $clearSum;
+//            $sum["check"][$val->name] = $val->check_percent;
+//            $clearSumm = $clearSumm + $clearSum;
+//            $sumPer['cost'][$val->name] = $empPersum;
+//            $summ['cost'] = $summ['cost'] + $empsum;
+//            $perSumm['cost'] = $perSumm['cost'] + $empPersum;
+
+
+        $department = Yii::app()->db->createCommand()
+            ->select('')
+            ->from('department')
+            ->queryAll();
+
+        $completeavans = Yii::app()->db->createCommand()
+            ->select("sum(expSum) as summ")
+            ->from("prepaid")
+            ->where("date(prepDate) = :to ",array(":to"=>$to))
+            ->queryRow();
+
+        $this->renderPartial('printReport',array(
+            'department'=>$department,
+            'to'=>$to,
+            'sum'=>$temp,
+            'debt' => $debt,
+            'paidDebt' => $paidDebt,
+//            'empSum'=>$sum,
+//            'sumPer'=>$perSumm,
+//            'clearSumm'=>$clearSumm,
+//            'empPerSum'=>$sumPer,
+            'terminal'=>$term,
+            'avans'=>$avans["prepaidSum"] + $completeavans["summ"],
+//            'empCnt' => $empCnt,
+            'cost' => $cost
+
+        ));
+    }
 }

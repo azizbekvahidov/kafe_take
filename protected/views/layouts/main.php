@@ -15,9 +15,13 @@
 	<![endif]-->
 
     <script src="<?php echo Yii::app()->request->baseUrl; ?>/js/orders/jquery.min.js"></script>
+    <link href="<?php echo Yii::app()->request->baseUrl; ?>/css/gentella/font-awesome/css/font-awesome.min.css" rel="stylesheet">
     <link href="<?php echo Yii::app()->request->baseUrl; ?>/css/orders/bootstrap3.css" rel="stylesheet">
     <link href="<?php echo Yii::app()->request->baseUrl; ?>/css/gentella/custom.css" rel="stylesheet">
+    <link href="<?php echo Yii::app()->request->baseUrl; ?>/css/gentella/daterangepicker.css" rel="stylesheet">
+    <link href="<?php echo Yii::app()->request->baseUrl; ?>/css/gentella/bootstrap-datetimepicker.min.css" rel="stylesheet">
     <link href="<?php echo Yii::app()->request->baseUrl; ?>/css/orders/chosen.css" rel="stylesheet">
+
     <link href="<?php echo Yii::app()->request->baseUrl; ?>/css/orders/keyboard.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="<?php echo Yii::app()->request->baseUrl; ?>/css/orders/vKey.css " />
     <link rel="stylesheet" type="text/css" href="<?php echo Yii::app()->request->baseUrl; ?>/css/orders/own.css " />
@@ -39,6 +43,12 @@
 </div><!-- page -->
 
     <script src="<?php echo Yii::app()->request->baseUrl; ?>/js/bootstrap3.js"></script>
+    <script src="<?php echo Yii::app()->request->baseUrl; ?>/js/orders/own.js"></script>
+<!--    <script src="--><?php //echo Yii::app()->request->baseUrl; ?><!--/js/orders/select2.full.min.js"></script>-->
+    <script src="<?php echo Yii::app()->request->baseUrl; ?>/js/orders/moment.min.js"></script>
+
+    <script src="<?php echo Yii::app()->request->baseUrl; ?>/js/orders/daterangepicker.js"></script>
+    <script src="<?php echo Yii::app()->request->baseUrl; ?>/js/orders/bootstrap-datetimepicker.min.js"></script>
     <script src="<?php echo Yii::app()->request->baseUrl; ?>/js/orders/jQuerySession.js"></script>
     <script src="<?php echo Yii::app()->request->baseUrl; ?>/js/jquery.printPage.js"></script>
 
