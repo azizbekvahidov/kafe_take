@@ -4,6 +4,21 @@ body.wood {
     /*background: #d1ba9b top center;
     background-image: url('/images/body-bg.jpeg');*/
 }
+#searchDiv {
+    display: none;
+    height: 210px;
+    width: 100%;
+    background-color: white;
+    overflow-y: scroll;
+}.activeSearchElement {
+     color: #000;
+     background-color: lightblue;
+ }
+.searchElement {
+    font-size: 16px;
+    border-bottom: 1px solid;
+    padding: 5px 5px;
+}
 .main-container {
     margin: 0;
     width: 100%;

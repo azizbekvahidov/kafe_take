@@ -9,8 +9,20 @@
     <nav id="navsMenu">
         <ul  class="nav nav-pills">
 
-            <li role="presentation">
-                                <?=CHtml::dropDownList('menuDrop','',$menu->getMenuList())?></li>
+            <li role="presentation" style="margin-top: 10px;">
+<!--                <div class="col-sm-12">-->
+<!--                    <div class="col-sm-10"><input type="text" class="form-control" id="searchMenu" placeholder="Введите мин 3 символа"></div>-->
+<!--                    <div class="col-sm-2">-->
+<!--                        <a href="#" class="btn btn-danger" id="closeSearch"><i class="fa fa-close"></i></a>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!---->
+<!--                <div id="searchDiv">-->
+<!---->
+<!--                </div>-->
+
+                <?=CHtml::dropDownList('menuDrop','',$menu->getMenuList())?>
+            </li>
             <li role="presentation" ><a class="btn btn-info" href="#" id="addBtn">+</a></li>
             <li role="presentation" class="dropdown">
                 <a class="dropdown-toggle" data-toggle="dropdown" href="#" style="font-size: x-small" role="button" aria-haspopup="true" aria-expanded="false">
@@ -96,6 +108,7 @@
 
 
     <script>
+
         var globExpId = 0;
         var cntObj;
         var cntVal;
@@ -103,7 +116,31 @@
         var commentedElement = "";
         // $(".btnPrint").printPage();
         // $(".expCheck").printPage();
+        $(document).ready(function(){
 
+            document.onkeyup = function (e) {
+                e = e || window.event;
+
+                    switch (e.keyCode) {
+                        case 13:
+                            if(selectedInput == "searchMenu"){
+                                searchMenu();
+                            }
+                            break;
+
+                    }
+
+                // Отменяем действие браузера
+                return false;
+            };
+            $('.digit').click(function(){
+                var emptyVal = $('.empty input').val();
+                if($('.empty input').val().length != 4){
+                    $('.empty input').val(emptyVal+$(this).text());
+                }
+            });
+
+        });
         function addTab(id = 0){
             if(id == 0) {
                 $.ajax({
@@ -137,6 +174,83 @@
             }
         }
 
+        $(document).on("focus","#searchMenu",function (){
+            $("#searchDiv").css("display","block");
+            selectedInput = "searchMenu";
+        });
+        function searchMenu(){
+            var searchTxt = $("#searchMenu").val();
+            var htmlTxt = "";
+            if(searchTxt.length >= 3) {
+                $.ajax({
+                    type: "GET",
+                    url: "<?php echo Yii::app()->createUrl('menu/searchList'); ?>",
+                    data: "txt=" + encodeURIComponent(searchTxt),
+                    success: function (data) {
+                        data = JSON.parse(data);
+                        if(data.length != 0) {
+                            $.each(data, function (i, b) {
+                                htmlTxt += "<div class='searchElement' data-id='" + i + "'>" + b + "</div>";
+                            });
+                        }
+                        else{
+                            htmlTxt += "<div> Ничего не надено</div>";
+
+                        }
+                        $("#searchDiv").html(htmlTxt);
+                    }
+                });
+            }
+        }
+
+
+        $(document).on("click",".searchElement", function (){
+            $(".searchElement").removeClass("activeSearchElement");
+            $(this).addClass("activeSearchElement");
+            var texts = $(this).text();
+            var thisId = $(this).attr("data-id");
+            var temps = str_split(texts,1);
+            if($('#order tr.'+thisId).exists()){
+                var types = str_split(thisId,1);
+                var count = $('#order tr.'+thisId).children("td.cnt").children('input').val();
+                count = parseFloat(count)+1;
+                $('#order tr.'+thisId).children("td:first-child").children('input').val(thisId);
+                $('#order tr.'+thisId).children("td.cnt").children('input').val(count);
+                $('#order tr.'+thisId).children("td.cnt").children('span').text(count);
+            }
+            else{
+                var types = str_split(thisId,1);
+                $('.tab-content .active .order').append("<tr class="+thisId+">\
+                                <td class='removed  '>\
+                                    <i class='glyphicon glyphicon-remove'></i>\
+                                    <input style='display:none' name='id[]' value='"+thisId+"' />\
+                                </td>\
+                                <td class='dish'> <input style='display:none' type='text' name='comment[]'>"+temps[0]+"</td>\
+                                <td>"+temps[1]+"</td>\
+                                <td class='cnt'>\
+                                    <input name='count[]' style='display:none' value='1' />\
+                                    <a type='button' class='pluss btn hide'>\
+										<input name='' style='display:none' value='0'>\
+                                        <i class='fa fa-plus'></i>\
+                                    </a>\
+                                    <span>" +1+"</span>\
+                                    <a type='button' class='minus btn hide'>\
+                                        <i class='fa fa-minus'></i>\
+                                    </a>\
+                                </td>\
+                            </tr>");
+            }
+            getSum();
+        });
+
+
+        $(document).on("click","#closeSearch",function (){
+            console.log("clicked");
+            $("#searchDiv").css("display","none");
+            $("#searchMenu").val("");
+            $("#searchDiv").html("");
+            selectedInput = "";
+        });
         function getOrder(expId){
             $.ajax({
                 type: "POST",
