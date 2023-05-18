@@ -10,6 +10,9 @@ body.wood {
     width: 100%;
     background-color: white;
     overflow-y: scroll;
+    position: absolute;
+    z-index: 2;
+    top: 50px;
 }.activeSearchElement {
      color: #000;
      background-color: lightblue;

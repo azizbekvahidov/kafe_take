@@ -9,19 +9,19 @@
     <nav id="navsMenu">
         <ul  class="nav nav-pills">
 
-            <li role="presentation" style="margin-top: 10px;">
-<!--                <div class="col-sm-12">-->
-<!--                    <div class="col-sm-10"><input type="text" class="form-control" id="searchMenu" placeholder="Введите мин 3 символа"></div>-->
-<!--                    <div class="col-sm-2">-->
-<!--                        <a href="#" class="btn btn-danger" id="closeSearch"><i class="fa fa-close"></i></a>-->
-<!--                    </div>-->
-<!--                </div>-->
-<!---->
-<!--                <div id="searchDiv">-->
-<!---->
-<!--                </div>-->
+            <li role="presentation" style="margin-top: 10px; width: 42%;" >
+                <div class="col-sm-12">
+                    <div class="col-sm-10"><input type="text" class="form-control" id="searchMenu" placeholder="Введите мин 3 символа"></div>
+                    <div class="col-sm-2">
+                        <a href="#" class="btn btn-danger" id="closeSearch"><i class="fa fa-close"></i></a>
+                    </div>
+                </div>
 
-                <?=CHtml::dropDownList('menuDrop','',$menu->getMenuList())?>
+                <div id="searchDiv">
+
+                </div>
+
+                <?//=CHtml::dropDownList('menuDrop','',$menu->getMenuList())?>
             </li>
             <li role="presentation" ><a class="btn btn-info" href="#" id="addBtn">+</a></li>
             <li role="presentation" class="dropdown">
@@ -210,13 +210,13 @@
             var texts = $(this).text();
             var thisId = $(this).attr("data-id");
             var temps = str_split(texts,1);
-            if($('#order tr.'+thisId).exists()){
+            if($('.tab-content .active .order tr.'+thisId).exists()){
                 var types = str_split(thisId,1);
-                var count = $('#order tr.'+thisId).children("td.cnt").children('input').val();
+                var count = $('.tab-content .active .order tr.'+thisId).children("td.cnt").children('input').val();
                 count = parseFloat(count)+1;
-                $('#order tr.'+thisId).children("td:first-child").children('input').val(thisId);
-                $('#order tr.'+thisId).children("td.cnt").children('input').val(count);
-                $('#order tr.'+thisId).children("td.cnt").children('span').text(count);
+                $('.tab-content .active .order tr.'+thisId).children("td:first-child").children('input').val(thisId);
+                $('.tab-content .active .order tr.'+thisId).children("td.cnt").children('input').val(count);
+                $('.tab-content .active .order tr.'+thisId).children("td.cnt").children('span').text(count);
             }
             else{
                 var types = str_split(thisId,1);

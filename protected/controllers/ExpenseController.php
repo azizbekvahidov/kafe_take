@@ -653,88 +653,7 @@ class ExpenseController extends SetupController
 		    $model=new Expense;
         $func = new Functions();
 		$percent = new Percent();
-        if($_POST['action'] == 'create') {
-            //$transaction = Yii::app()->db->beginTransaction();
-            try {
-                $dates = date('Y-m-d H:i:s');
-                $dishMsg = '*dish=>';
-                $stuffMsg = '*stuff=>';
-                $prodMsg = '*prod=>';
-                $dishMessage = '';
-                $stuffMessage = '';
-                $prodMessage = '';
-                $archive_message = '';
-                $pCount = $_POST['peoples'];
-				if($_POST["check"] == 1) {
-				    if($_POST['banket'] == 0){
-                        $_POST['expSum']=number_format(($_POST['expSum'] + $_POST['expSum'] * $percent->getPercent(date("Y-m-d")) / 100) / 100, 0, ',', '') * 100;
-                    }
-                    else{
-                        $_POST['expSum']=number_format(($_POST['expSum'] + $_POST['expSum'] * 15 / 100) / 100, 0, ',', '') * 100;
-                    }
-                }
-                Yii::app()->db->createCommand()->insert('expense',array(
-                    'order_date'=>$dates,
-                    'employee_id'=>$_POST['employee_id'],
-                    'table'=>$_POST['table'],
-                    'status'=>1,
-                    'mType'=>1,
-                    'pCount'=>$pCount,
-                    'expSum'=>$_POST['expSum']  ,
-                    'banket'=>$_POST['banket']
-                ));
-                $expId = Yii::app()->db->getLastInsertID();
-                foreach ($_POST['id'] as $key => $val) {
 
-            
-                    $count = floatval($_POST['count'][$key]);
-                    $types = 0;
-                    $temp = explode('_',$val);
-                    if($temp[0] == 'dish') {
-                        $types = 1;
-                        $dishMessage .= $temp[1].":".$count.",";
-                    }
-                    if($temp[0] == 'stuff') {
-                        $types = 2;
-                        $stuffMessage .= $temp[1].":".$count.",";
-                    }
-                    if($temp[0] == 'product') {
-                        $types = 3;
-                        $prodMessage .= $temp[1].":".$count.",";
-                    }
-
-                    Yii::app()->db->createCommand()->insert('orders',array(
-                        'expense_id'=>$expId,
-                        'just_id'=>$temp[1],
-                        'count'=>$count,
-                        'type'=>$types
-                    ));
-                    //$expense->addExpenseList($temp[1],$types,date("Y-m-d"),$count);
-                    $order_id = Yii::app()->db->getLastInsertID();
-                    Yii::app()->db->createCommand()->insert('orderRefuse',array(
-                        'order_id'=>$order_id,
-                        'count'=>$count,
-                        'add'=>1,
-                        'not_time'=>$dates,
-                        'refuse_time'=>$dates
-                    ));
-                }
-                //$expense->addExpenseList($temp[1],$types,date("Y-m-d"),$count);
-                $archive_message .= ((!empty($dishMessage)) ? $dishMsg.$dishMessage : '').((!empty($stuffMessage)) ? $stuffMsg.$stuffMessage : '').((!empty($prodMessage)) ? $prodMsg.$prodMessage : '');
-                $archive = new ArchiveOrder();
-                $archive->setArchive('create', $expId, $archive_message,$_POST['employee_id']);
-                //$transaction->commit();
-                //$func->PrintCheck($expId,'create',$_POST['id'],$_POST['employee_id'],$_POST['count'],$_POST['table']);
-                echo $expId;
-
-            } catch (Exception $e) {
-
-                //$transaction->rollBack();
-                Yii::app()->user->setFlash('error', "{$e->getMessage()}");
-                //$this->refresh();
-            }
-        }
-        if($_POST['action'] == 'update'){
             try{
                 $function = new Functions();
                 $dishMsg = '*dish=>';
@@ -749,15 +668,6 @@ class ExpenseController extends SetupController
                 $delivery["comment"] = $_POST["deliveryComment"];
                 $delivery["time"] = $_POST["deliveryTime"];
                 $delivery["phone"] = $_POST["deliveryPhone"];
-//                if($_POST['banket'] == 0){
-//                    $_POST['expSum']=number_format(($_POST['expSum'] + $_POST['expSum'] * $percent->getPercent(date("Y-m-d")) / 100) / 100, 0, ',', '') * 100;
-//                }
-//                else{
-//                    $_POST['expSum']=number_format(($_POST['expSum'] + $_POST['expSum'] * 15 / 100) / 100, 0, ',', '') * 100;
-//                }
-//                if($_POST["ready_time"] != ""){
-//                    $_POST["ready_time"] = date("H:i:s",strtotime($_POST["ready_time"]));
-//                }
 				Yii::app()->db->createCommand()->update('expense',array(
 				    'expSum'=>$_POST['expSum'],
                     "phone"=>$_POST["phone"],
@@ -768,12 +678,6 @@ class ExpenseController extends SetupController
                     $delivery["time"] = $_POST["ready_time"];
                 }
                 $refuseTime = date('Y-m-d H:i:s');
-//                Yii::app()->db->createCommand()->update("orders",array(
-//                    'count' => 0,
-//                    'deleted' => 1
-//                ),'expense_id = '.$expId);        die();
-                // $archive = new ArchiveOrder()
-                // $archive->setArchive('update', $expId, $archive_message,$_POST['employee_id']);
                 foreach ($_POST['id'] as $key => $val) {
                     $count = floatval($_POST['count'][$key]);
 
@@ -823,23 +727,14 @@ class ExpenseController extends SetupController
                                     'deleted'=>0
                                 ), 'order_id = :id', array(':id' => $model['order_id']));
                             }
-//                            echo "<pre>";
-//                            print_r("prod_id => ".$temp[1]);
-//                            echo "</pre>";
-//                            echo "<pre>";
-//                            print_r("getCount => ".$count);
-//                            echo "</pre>";
-//                            echo "<pre>";
-//                            print_r("modelCount => ".$model["count"]);
-//                            echo "</pre>";
-                            $expense->addExpenseList($temp[1],$types,date("Y-m-d"),$count - $model["count"]);
+//                            $expense->addExpenseList($temp[1],$types,date("Y-m-d"),$count - $model["count"]);
                             Yii::app()->db->createCommand()->update('expense',array('expSum'=>$_POST['expSum'],'banket'=>$_POST['banket']),'expense_id = :id',array(':id'=>$expId));
                         } 
                         else{
                             Yii::app()->db->createCommand()->update('orders', array(
                                 'deleted' => 1
                             ), 'order_id = :id', array(':id' => $model['order_id']));
-                            $expense->addExpenseList($temp[1],$types,date("Y-m-d"),$count - $model["count"]);
+//                            $expense->addExpenseList($temp[1],$types,date("Y-m-d"),$count - $model["count"]);
 
                         }
                     }
@@ -853,29 +748,29 @@ class ExpenseController extends SetupController
                             'count'=>$count,
                             'type'=>$types
                         ));
-                        $order_id = Yii::app()->db->getLastInsertID();
-                        Yii::app()->db->createCommand()->insert('orderRefuse',array(
-                            'order_id'=>$order_id,
-                            'count'=>$count,
-                            'add'=>1,
-                            'not_time'=>$refuseTime,
-                            'refuse_time'=>$refuseTime
-                        ));
-                        $expense->addExpenseList($temp[1],$types,date("Y-m-d"),$count - $model["count"]);
+//                        $order_id = Yii::app()->db->getLastInsertID();
+//                        Yii::app()->db->createCommand()->insert('orderRefuse',array(
+//                            'order_id'=>$order_id,
+//                            'count'=>$count,
+//                            'add'=>1,
+//                            'not_time'=>$refuseTime,
+//                            'refuse_time'=>$refuseTime
+//                        ));
+//                        $expense->addExpenseList($temp[1],$types,date("Y-m-d"),$count - $model["count"]);
                     }
                 }
-                $refuse = Yii::app()->db->createCommand()
-                    ->select()
-                    ->from('orders')
-                    ->where('expense_id = :id AND deleted = 1 AND status = 1 AND count != 0',array(':id'=>$expId))
-                    ->queryAll();
-                if(!empty($refuse)){
-                    foreach ($refuse as $val) {
-                        Yii::app()->db->createCommand()->update('orders',array(
-                            'count'=>0,
-                        ), 'order_id = :id',array(':id'=>$val['order_id']));
-                    }
-                }
+//                $refuse = Yii::app()->db->createCommand()
+//                    ->select()
+//                    ->from('orders')
+//                    ->where('expense_id = :id AND deleted = 1 AND status = 1 AND count != 0',array(':id'=>$expId))
+//                    ->queryAll();
+//                if(!empty($refuse)){
+//                    foreach ($refuse as $val) {
+//                        Yii::app()->db->createCommand()->update('orders',array(
+//                            'count'=>0,
+//                        ), 'order_id = :id',array(':id'=>$val['order_id']));
+//                    }
+//                }
 
                 if(!empty($tempModel)){
                     foreach ($tempModel as $val) {
@@ -913,7 +808,7 @@ class ExpenseController extends SetupController
 //                Yii::app()->user->setFlash('error', "{$e->getMessage()}");
                 //$this->refresh();
             }
-		}
+
     }
 
 
