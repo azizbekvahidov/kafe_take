@@ -491,7 +491,7 @@ class Functions {
                             ->where('d.dish_id = :id', array(':id' => $expl[1]))
                             ->queryRow();
                         $result[$model['depName']][$model['dName']] = $count[$key];
-                        $comments[$model['depName']][$model['dName']].=$comment[$key];
+                        $comments[$model['depName']][$model['dName']]=$comment[$key];
                         $print[$model['depName']] = $model['printer'];
                     }
                     if($expl[0] == 'stuff'){
@@ -502,7 +502,7 @@ class Functions {
                             ->where('h.halfstuff_id = :id',array(':id'=>$expl[1]))
                             ->queryRow();
                         $result[$model['depName']][$model['dName']] = $count[$key];
-                        $comments[$model['depName']][$model['dName']].=$comment[$key];
+                        $comments[$model['depName']][$model['dName']]=$comment[$key];
                         $print[$model['depName']] = $model['printer'];
                     }
                     if($expl[0] == 'product'){
@@ -513,7 +513,7 @@ class Functions {
                             ->where('p.product_id = :id',array(':id'=>$expl[1]))
                             ->queryRow();
                         $result[$model['depName']][$model['dName']] = $count[$key];
-                        $comments[$model['depName']][$model['dName']].=$comment[$key];
+                        $comments[$model['depName']][$model['dName']]=$comment[$key];
                         $print[$model['depName']] = $model['printer'];
                     }
                 }
@@ -584,7 +584,7 @@ class Functions {
                                 ->where('d.dish_id = :id', array(':id' => $expl[1]))
                                 ->queryRow();
                             $result[$model['depName']][$model['dName']] = $count[$key];
-                            $comments[$model['depName']][$model['dName']].=$comment[$key];
+                            $comments[$model['depName']][$model['dName']]=$comment[$key];
                             $print[$model['depName']] = $model['printer'];
                             break;
                         case 'stuff':
@@ -595,7 +595,7 @@ class Functions {
                                 ->where('h.halfstuff_id = :id',array(':id'=>$expl[1]))
                                 ->queryRow();
                             $result[$model['depName']][$model['dName']] = $count[$key];
-                            $comments[$model['depName']][$model['dName']].=$comment[$key];
+                            $comments[$model['depName']][$model['dName']]=$comment[$key];
                             $print[$model['depName']] = $model['printer'];
                             break;
                         case 'product':
@@ -606,7 +606,7 @@ class Functions {
                                 ->where('p.product_id = :id',array(':id'=>$expl[1]))
                                 ->queryRow();
                             $result[$model['depName']][$model['dName']] = $count[$key];
-                            $comments[$model['depName']][$model['dName']].=$comment[$key];
+                            $comments[$model['depName']][$model['dName']]=$comment[$key];
                             $print[$model['depName']] = $model['printer'];
                             break;
                     }
@@ -618,142 +618,80 @@ class Functions {
         }
         foreach($result as $key => $val) {
             $date=date("Y-m-d H:i:s");
-            Yii::app()->db->createCommand()->insert("print",array(
-                'waiter' => Yii::app()->user->getId(),
-                'table' => 0,
-                'printTime' => $date,
-                'department' => $key." - ".$action,
-                'printer' => $print[$key],
-            ));
-            $lastId = Yii::app()->db->getLastInsertID();
-            $this->PrintChecks($print,$val,$lastId,$user,$table,$key,$date,$expId,$delivery,$comments[$key]);
+
+            $this->PrintChecks($print,$val,$user,$table,$key,$date,$expId,$delivery,$comments[$key]);
         }
 
     }
 
 
 
-    public function PrintChecks($print,$val,$lastId,$user,$table,$key,$date, $expId,$delivery,$comment){
+    public function PrintChecks($print,$val,$user,$table,$key,$date, $expId,$delivery,$comment){
         try {
             if (!empty($print[$key])) {
 
 //                $profile = CapabilityProfile::load("simple");
 
-                $profile = CapabilityProfile::load("default");
+//                $profile = CapabilityProfile::load("default");
                 //              $connector = new NetworkPrintConnector("XP-58", 9100);
                 if(Yii::app()->config->get("printer_interface") == "usb")
                     $connector = new WindowsPrintConnector($print[$key]);
                 if(Yii::app()->config->get("printer_interface") == "ethernet")
                     $connector=new NetworkPrintConnector($print[$key],9100);
 
-                $printer = new Printer($connector, $profile);
-                $printerWidth = Yii::app()->config->get("printer_width");
-                switch ($printerWidth){
-                    case 58:
-                        $printer ->setPrintWidth(580);
-                        $printer->setJustification(Printer::JUSTIFY_CENTER);
-                        $printer->text("Счет № ".$expId."\n");
-                        $printer->setJustification(Printer::JUSTIFY_LEFT);
-                        $printer->setTextSize(2, 2);
-                        $printer->text($key);
+                $printer = new Printer($connector);
 
-                        $printer->setTextSize(2, 1);
-                        $printer->text("\n");
+                $printer ->setPrintWidth(800);
+                $printer->setJustification(Printer::JUSTIFY_CENTER);
+                $printer->text("Счет № ");
+                $printer->text($expId."\n");
+                $printer->setJustification(Printer::JUSTIFY_LEFT);
+                $printer->setTextSize(2, 2);
+                $printer->text($key);
 
-                        $printer->setTextSize(1, 1);
-                        foreach ($val as $keys=>$value) {
-                            $order = new item($keys, $value);
-                            $printer -> text($order);
-                            if($comment[$keys] != "") {
-                                $printer->text($comment[$keys]);
-                            }
-                            $printer->feed();
-                        }
-                        $printer->setJustification(Printer::JUSTIFY_CENTER);
-                        $printer->text("-------------------\n");
+                $printer->setTextSize(2, 1);
+                $printer->text("\n");
 
-                        $printer->setJustification(Printer::JUSTIFY_LEFT);
-
-                        $printer->setTextSize(1, 1);
-                        $printer->text($user["name"]."\n");
-
-                        $printer->setTextSize(2, 1);
-
-                        if($delivery["phone"] != '')
-                            $printer->text("-----На вынос------");
-                        else
-                            $printer->text("-----Доставка------");
-
-                        $printer->setTextSize(1, 1);
-
-                        /* Footer */
-                        if($delivery["phone"] != '') {
-                            $printer->text("Время : ".$delivery["time"]. "\n");
-                            $printer->text("Комментарий к заказу: ".$delivery["comment"]. "\n");
-                        }
-                        $printer->feed(1);
-                        $printer->text($date . "\n");
-                        //$printer->text("------------------" . "\n");
-                        $printer->feed(2);
-
-                        /* Cut the receipt and open the cash drawer */
-                        $printer->cut();
-                        $printer->pulse();
-                        $printer->getPrintConnector()->write(PRINTER::ESC . "B" . chr(4) . chr(1));
-                        break;
-                    case 80:
-                        $printer ->setPrintWidth(800);
-                        $printer->setJustification(Printer::JUSTIFY_CENTER);
-                        $printer->text("Счет № ");
-                        $printer->text($expId."\n");
-                        $printer->setJustification(Printer::JUSTIFY_LEFT);
-                        $printer->setTextSize(2, 2);
-                        $printer->text($key);
-
-                        $printer->setTextSize(2, 1);
-                        $printer->text("\n");
-
-                        $printer->setTextSize(1, 1);
-                        foreach ($val as $keys=>$value) {
-                            $order = new item($keys, $value);
-                            $printer -> text($order);
-                            if($comment[$keys] != "") {
-                                $printer->text($comment[$keys]);
-                            }
-                            $printer->feed();
-                        }
-                        $printer->setJustification(Printer::JUSTIFY_CENTER);
-                        $printer->text("-------------------\n");
-
-                        $printer->setJustification(Printer::JUSTIFY_LEFT);
-
-                        $printer->setTextSize(1, 1);
-                        $printer->text($user["name"]."\n");
-
-                        $printer->setTextSize(2, 1);
-                        if($delivery["phone"] == '')
-                            $printer->text("-----На вынос------");
-                        else
-                            $printer->text("-----Доставка------");
-
-                        $printer->setTextSize(1, 1);
-
-                        /* Footer */
-                        if($delivery["phone"] != '') {
-                            $printer->text("Время доставки: ".$delivery["time"]. "\n");
-                            $printer->text("Комментарий к заказу: ".$delivery["comment"]. "\n");
-                        }
-                        $printer->feed(1);
-                        $printer->text($date . "\n");
-                        //$printer->text("------------------" . "\n");
-                        $printer->feed(2);
-
-                        /* Cut the receipt and open the cash drawer */
-                        $printer->cut();
-                        $printer->pulse();
-                        $printer->getPrintConnector()->write(PRINTER::ESC . "B" . chr(4) . chr(1));
-                        break;
+                $printer->setTextSize(1, 1);
+                foreach ($val as $keys=>$value) {
+                    $order = new item($keys, $value);
+                    $printer -> text($order);
+                    if(isset($comment[$keys]) && $comment[$keys] != "") {
+                        $printer->text($comment[$keys]);
+                    }
+                    $printer->feed();
                 }
+                $printer->setJustification(Printer::JUSTIFY_CENTER);
+                $printer->text("-------------------\n");
+
+                $printer->setJustification(Printer::JUSTIFY_LEFT);
+
+                $printer->setTextSize(1, 1);
+                $printer->text($user["name"]."\n");
+
+                $printer->setTextSize(2, 1);
+                if($delivery["phone"] == '')
+                    $printer->text("-----На вынос------");
+                else
+                    $printer->text("-----Доставка------");
+
+                $printer->setTextSize(1, 1);
+
+                /* Footer */
+                if($delivery["phone"] != '') {
+                    $printer->text("Время доставки: ".$delivery["time"]. "\n");
+                    $printer->text("Комментарий к заказу: ".$delivery["comment"]. "\n");
+                }
+                $printer->feed(1);
+                $printer->text($date . "\n");
+                //$printer->text("------------------" . "\n");
+                $printer->feed(2);
+
+                /* Cut the receipt and open the cash drawer */
+                $printer->cut();
+                $printer->pulse();
+                $printer->getPrintConnector()->write(PRINTER::ESC . "B" . chr(4) . chr(1));
+
                 $printer->close();
             }
             else{
@@ -804,7 +742,10 @@ class Functions {
             if (!empty($array2)) {
                 foreach ($array1 as $key => $value) {
                     foreach ($value as $keys => $val) {
-                        $temp = $val - $array2[$key][$keys];
+                        $temp=$val;
+                        if(isset($keys,$array2[$key])){
+                            $temp -=  $array2[$key][$keys];
+                        }
                         if ($temp != 0) {
                             $result[$key][$keys] = $temp;
                         }
@@ -812,7 +753,10 @@ class Functions {
                 }
                 foreach ($array2 as $key => $value) {
                     foreach ($value as $keys => $val) {
-                        $temp = $val - $array1[$key][$keys];
+                        $temp=$val;
+                        if(isset($keys,$array1[$key])){
+                            $temp -=  $array1[$key][$keys];
+                        }
                         if ($temp != 0) {
                             $result[$key][$keys] = -$temp;
                         }

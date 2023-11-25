@@ -68,14 +68,14 @@ class SiteController extends SetupController
                 ->join("employee e","e.employee_id = c.employee_id")
                 ->where("c.status = 1")
                 ->queryRow();
-            if($change["employee_id"] != Yii::app()->user->getId()){
-                $this->redirect("site/changeUser");
-            }
+//            if($change["employee_id"] != Yii::app()->user->getId()){
+//                $this->redirect("site/changeUser");
+//            }
             $menuModel = Dishtype::model()->findAll('t.parent = :parent', array(':parent' => 0));
             $expModel = Yii::app()->db->CreateCommand()
                 ->select()
                 ->from("expense")
-                ->where('`table` = 0 and `status` != 0 and debt != 1')
+                ->where('`table` = 0 and `status` != 0 and debt != 1 and employee_id = '.Yii::app()->user->id)
                 ->queryAll();
             $model = new Expense;
             $this->render('index', array(

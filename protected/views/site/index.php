@@ -26,7 +26,7 @@
             <li role="presentation" ><a class="btn btn-info" href="#" id="addBtn">+</a></li>
             <li role="presentation" class="dropdown">
                 <a class="dropdown-toggle" data-toggle="dropdown" href="#" style="font-size: x-small" role="button" aria-haspopup="true" aria-expanded="false">
-                    <?=$change["name"]."<br>".$change["start_time"]?> <span class="caret"></span>
+                    <?=Yii::app()->user->getName()."<br>".$change["start_time"]?> <span class="caret"></span>
                 </a>
                 <ul class="dropdown-menu">
                     <li role="presentation" ><a href="site/avans" id="close">Авансы</a></li>

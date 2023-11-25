@@ -68,7 +68,7 @@ class MenuController extends Controller
             $menuList['stuff_'.$val["just_id"]] = $val['name']."_".$price->getPrice($val["just_id"],$val["mType"],$val["type"],$dates);
         }
         foreach ($prodModel as $val) {
-            $menuList['prod_'.$val["just_id"]] = $val['name']."_".$price->getPrice($val["just_id"],$val["mType"],$val["type"],$dates);
+            $menuList['product_'.$val["just_id"]] = $val['name']."_".$price->getPrice($val["just_id"],$val["mType"],$val["type"],$dates);
         }
         echo json_encode($menuList);
     }
